@@ -1,0 +1,22 @@
+#!/bin/bash
+
+if [ -z $2 ]
+then
+    ns=dev
+else
+    ns=$2
+fi
+
+if [ ! -d "/devop/docker-images/$1" ]
+then
+    echo "/devop/docker-images/$1 doesn't exists."
+    exit
+fi
+
+
+cd /devop/docker-images/$1/
+./build.sh
+cd /typ/pod/$1
+
+kubbuild $ns
+

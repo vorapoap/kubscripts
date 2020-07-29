@@ -1,0 +1,4 @@
+for x in k8sw1 k8sw2 k8sw3 k8sw4 k8sw5 
+    do
+        ssh $x free -m
+    done

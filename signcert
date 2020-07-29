@@ -1,0 +1,59 @@
+#!/bin/bash
+echo "${0} [domain] [namespace]"
+
+
+DOMAIN=$1
+INGRESS=${1//\./-}
+#kubectl delete ingress ${INGRESS}
+DATE="$(date +%Y%m%d)-$(uuidgen)"
+NS=$2
+#cat << EOF | kubectl apply -f -
+#---
+#apiVersion: extensions/v1beta1
+#kind: Ingress
+#metadata:
+#  labels:
+#    date: ${DATE}
+#  annotations:
+#    kubernetes.io/ingress.class: traefik
+#    traefik.ingress.kubernetes.io/rule-type: "PathPrefixStrip"
+#    cert-manager.io/cluster-issuer: ${NS}-letsencrypt-prod
+#  name: ${INGRESS}
+#  namespace: ${NS}
+#spec:
+#  rules:
+#  - host: ${DOMAIN}
+#    http:
+#      paths:
+#      - path: 
+#        backend:
+#          serviceName: ${INGRESS}
+#          servicePort: 80
+#  tls:
+#  - hosts:
+#    - ${DOMAIN}
+#    secretName: ${DOMAIN}-cert
+#---
+
+cat > /devop/k8s/typ/secret/certs/${DOMAIN}.yml << EOT
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: ${DOMAIN}-cert
+  namespace: ${NS}
+  labels:
+    date: ${DATE}
+spec:
+  dnsNames:
+  - ${DOMAIN}
+  commonName: ${DOMAIN}
+  secretName: ${DOMAIN}-cert
+  issuerRef:
+    name: ${NS}-letsencrypt-prod 
+EOT
+kubectl apply -f /devop/k8s/typ/secret/certs/${DOMAIN}.yml
+
+
+
+#kubectl -n $NS describe certificate "${DOMAIN}"
+

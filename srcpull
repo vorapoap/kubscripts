@@ -1,0 +1,88 @@
+#!/bin/bash
+
+if [ -z "$4" ]
+then
+	echo "srcpull [TANKDIR] [web:job,live,yellow] [module/theme] [module:typ,y,typ_*,...] [maxdepth=0]"
+	echo "Example: "
+	echo "  srcpull playsite job module typ 0"
+	echo "  srcpull playsite job module force-all-typ 1"
+	echo "  srcpull playsite job theme typtheme"
+    exit
+fi
+
+TANK=$1
+WEB=$2
+MODE=$3
+MODULE=$4
+BASEMOD=${PWD}/${TANK}/www/$WEB/web
+
+
+G='\033[1;30m'
+H='\033[1;33m'
+T='\033[0;36m'
+N='\033[0m' # No Color
+
+
+if [ ! -z "$5" ]
+then
+    MAXDEPTH=$5
+else
+    MAXDEPTH=0
+fi
+
+echo -e "${T}Working with ${H}${BASEMOD}${G} [${H}${MODE}${G}] [${H}${MODULE}${G}] ${T}MAXDEPTH${G}=${H}${MAXDEPTH}${N}"
+
+case "$MODE" in
+	'module')
+		BASEMOD=$BASEMOD/modules/$MODULE
+
+		case "$MOD" in
+			'force-all-typ')
+                MAXDEPTH=1
+				for DIR in `find $BASEMOD -maxdepth ${MAXDEPTH} -type d` 
+				do
+					case "$DIR" in
+						'dev-examples')
+							;;
+						'.settings')
+							;;
+						*)
+							echo ""
+							echo -e "${G}==== ${T}${DIR} ${G}====${N}"
+							cd $DIR
+							sudo -u devop hg pull
+							sudo -u devop hg update -C
+					esac
+				done
+				;;
+
+			*)
+				for DIR in `find $BASEMOD -maxdepth ${MAXDEPTH} -type d `
+				do
+					echo ""
+					echo -e "${G}==== ${T}${DIR} ${G}====${N}"
+					cd $DIR
+					sudo -u devop hg pull
+					sudo -u devop hg update -C
+				done
+				;;
+		esac
+		;;   
+	'theme')
+		BASEMOD=$BASEMOD/themes/contrib/$MODULE
+		for DIR in `find ${BASEMOD} -maxdepth ${MAXDEPTH} -type d `
+		do
+			echo ""
+			echo -e "${G}==== ${T}${DIR}${G} ====${N}"
+			cd $DIR
+			sudo -u devop hg pull
+			sudo -u devop hg update -C
+		done
+		;;
+    *)
+        echo "srcpull [web] [module or theme]"
+        ;;
+esac
+
+echo "Done..."
+echo " "

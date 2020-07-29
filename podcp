@@ -1,0 +1,47 @@
+#!/bin/bash
+
+if [ -z $4 ]  
+then
+    echo "${0} [podset without typ-prefix] [namespace] [emptyDir-volume-name] [file-to-save]"
+    exit
+fi
+
+NS=$2
+PODSET=$1
+VOLNAME=$3
+PLAYSITEDIR=/devop/docker-images/typ-${PODSET}/playsite/www/${PODSET}
+#echo $PWD
+#echo $PLAYSITEDIR
+TOCOPY=${PWD/$PLAYSITEDIR/}/${4}
+FINDFILES=$(kubviewpod ${PODSET} ${NS} silence)
+
+if [ ! -f $4 ]
+then
+    echo "${4} doesn't exist..."
+    exit
+fi
+if [ ! -d $PLAYSITEDIR ] 
+then
+    echo "${PLAYSITEDIR} for ${PODSET} doesn't exist..."
+    exit
+fi
+
+LG='\033[1;30m'
+H='\033[1;33m'
+T='\033[0;36m'
+NC='\033[0m' # No Color
+
+echo "--"
+echo $FINDFILES
+
+for DESTBASE in $FINDFILES
+do
+    DEST=${DESTBASE}volumes/kubernetes.io~empty-dir/${VOLNAME}/${PODSET}
+    DEST=${DEST}${TOCOPY}
+    
+    scp -qr $4 $DEST
+    echo -e "${T}Trying to copy ${H}$4 ${T}to ${H}${DEST}${LG}.${NC}"
+done
+exit
+
+echo ""
